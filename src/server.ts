@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import { Pool } from "pg";
 import dotenv from "dotenv";
 import path from "path";
+import { emit } from "process";
 
 dotenv.config({
   path: path.join(process.cwd(), ".env"),
@@ -90,7 +91,7 @@ app.get("/users", async (req: Request, res: Response) => {
     });
   }
 });
-
+ 
 app.get("/users/:id", async (req: Request, res: Response) => {
   try {
     const result = await pool.query(`SELECT * FROM users WHERE id= $1`, [
@@ -173,9 +174,40 @@ app.delete("/users/:id", async (req: Request, res: Response) => {
 });
 
 // TODO CRUD
+app.post("/todos", async(req: Request, res: Response)=> {
+    const {user_id, title} = req.body
+    try{
+   const result = pool.query(
+    `INSERT INTO todos (user_id,title) VALUES ($1,$2) RETURNING *`, [user_id, title]
+   )
+    } catch(err: any){
+         res.status(500).json({
+           success : false,
+           message : err.message
+         })
+    }
+    res.status(201).json({
+      success : true,
+      message : "data posting successfully"
+    })
+  })
 
-
-
+app.get("/todos", async (req: Request, res: Response) => {
+  try {
+    const result = await pool.query(`SELECT * FROM todos`);
+    res.status(200).json({
+      success: true,
+      message: " todos data is here",
+      data: result.rows,
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+      details: err,
+    });
+  }
+});  
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
