@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express, { NextFunction, Request, Response } from "express";
 import { Pool } from "pg";
 import dotenv from "dotenv";
 import path from "path";
@@ -46,7 +46,15 @@ const initDB = async () => {
 
 initDB();
 
-app.get("/", (req: Request, res: Response) => {
+// logger middleware 
+const logger = (req: Request, res: Response, next : NextFunction) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}\n`);
+  next()
+}
+
+
+
+app.get("/", logger, (req: Request, res: Response) => {
   res.send("Hello World!");
 });
 
@@ -91,7 +99,7 @@ app.get("/users", async (req: Request, res: Response) => {
     });
   }
 });
- 
+
 app.get("/users/:id", async (req: Request, res: Response) => {
   try {
     const result = await pool.query(`SELECT * FROM users WHERE id= $1`, [
@@ -174,23 +182,24 @@ app.delete("/users/:id", async (req: Request, res: Response) => {
 });
 
 // TODO CRUD
-app.post("/todos", async(req: Request, res: Response)=> {
-    const {user_id, title} = req.body
-    try{
-   const result = pool.query(
-    `INSERT INTO todos (user_id,title) VALUES ($1,$2) RETURNING *`, [user_id, title]
-   )
-    } catch(err: any){
-         res.status(500).json({
-           success : false,
-           message : err.message
-         })
-    }
-    res.status(201).json({
-      success : true,
-      message : "data posting successfully"
-    })
-  })
+app.post("/todos", async (req: Request, res: Response) => {
+  const { user_id, title } = req.body;
+  try {
+    const result = pool.query(
+      `INSERT INTO todos (user_id,title) VALUES ($1,$2) RETURNING *`,
+      [user_id, title]
+    );
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+  res.status(201).json({
+    success: true,
+    message: "data posting successfully",
+  });
+});
 
 app.get("/todos", async (req: Request, res: Response) => {
   try {
@@ -288,6 +297,14 @@ app.delete("/todos/:id", async (req: Request, res: Response) => {
       message: err.message,
     });
   }
+});
+
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Route not found",
+    path: req.path,
+  });
 });
 
 /* Summary : Here todos table is refference table for User . Its means User is mother and todos is child. We can delete child(todos) and there will be not impect on mother (Users). But if we delete mother(Users) child will be deleted. Other things is WE can create a lot child by reffering a single mother's id. Everyhting will be idetified by id   */
