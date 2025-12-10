@@ -4,9 +4,8 @@ import { userService } from "./user.service";
 import { Result } from "pg";
 
 const createUser = async (req: Request, res: Response) => {
-  const { name, email } = req.body;
   try {
-    const result = await userService.createUser(name, email);
+    const result = await userService.createUser(req.body);
 
     res.status(201).json({
       success: true,
@@ -16,7 +15,7 @@ const createUser = async (req: Request, res: Response) => {
   } catch (err: any) {
     res.status(500).json({
       success: false,
-      message: "Data inserted failed , err.message",
+      message: "Data inserted failed"
     });
   }
 };
