@@ -1,32 +1,29 @@
 import { Request, Response } from "express";
-import { pool } from "../../../config/db";
-import { userService } from "./user.service";
-import { Result } from "pg";
+import { todoService } from "./todo.service";
 
-const createUser = async (req: Request, res: Response) => {
-  const { name, email } = req.body;
+const createTodo = async (req: Request, res: Response) => {
+  const { user_id, title } = req.body;
   try {
-    const result = await userService.createUser(name, email);
-
+    const result = await todoService.createTodo(user_id, title);
     res.status(201).json({
       success: true,
-      message: "data inserted successfully",
+      message: "TOdo created",
       data: result.rows[0],
     });
   } catch (err: any) {
     res.status(500).json({
       success: false,
-      message: "Data inserted failed , err.message",
+      message: err.message,
     });
   }
 };
 
-const getUser = async (req: Request, res: Response) => {
+const getTodo = async (req: Request, res: Response) => {
   try {
-    const result = await userService.getUser();
+    const result =await todoService.getTodo(req.params.id as string)
     res.status(200).json({
       success: true,
-      message: " user data is here",
+      message: " todos data is here",
       data: result.rows,
     });
   } catch (err: any) {
@@ -36,16 +33,16 @@ const getUser = async (req: Request, res: Response) => {
       details: err,
     });
   }
-};
+}
 
-const getSingleUser = async (req: Request, res: Response) => {
+const getSingleTodo =  async (req: Request, res: Response) => {
   try {
-    const result = await userService.getSingleUser(req.params.id as string);
+    const result = await todoService.getSingleTodo(req.params.id as string)
 
     if (result.rows.length === 0) {
       res.status(404).json({
         success: false,
-        message: "user not found",
+        message: "todos data not found",
       });
     } else {
       res.status(200).json({
@@ -60,26 +57,22 @@ const getSingleUser = async (req: Request, res: Response) => {
       message: err.message,
     });
   }
-};
+}
 
-const updateUser = async (req: Request, res: Response) => {
-  const { name, email } = req.body;
+const updateTodo = async (req: Request, res: Response) => {
+  const { user_id, title } = req.body;
   try {
-    const result = await userService.updateUser(
-      name,
-      email,
-      req.params.id as string
-    );
+    const result =await todoService.updateTodo(user_id , title, req.params.id as string )
     // console.log(result.rows);
     if (result.rows.length === 0) {
       res.status(404).json({
         success: false,
-        message: "user not found",
+        message: "todos data not found",
       });
     } else {
       res.status(200).json({
         success: true,
-        message: "user data update successfully",
+        message: "todos data update successfully",
         data: result.rows[0],
       });
     }
@@ -89,22 +82,23 @@ const updateUser = async (req: Request, res: Response) => {
       message: err.message,
     });
   }
-};
+}
 
-const deleteUser = async (req: Request, res: Response) => {
-  try {
-    const result = await userService.getUser();
+const deleteTodo = async (req: Request, res: Response) => {
+    
+    try {
+    const result = await todoService.deleteTodo(req.params.id as string)
 
     // console.log(result.rows);
     if (result.rowCount === 0) {
       res.status(404).json({
         success: false,
-        message: "user not found",
+        message: "todos data not found",
       });
     } else {
       res.status(200).json({
         success: true,
-        message: "user deleted successfully",
+        message: "todos data deleted successfully",
         data: null,
       });
     }
@@ -114,12 +108,8 @@ const deleteUser = async (req: Request, res: Response) => {
       message: err.message,
     });
   }
-};
+}
 
-export const userController = {
-  createUser,
-  getUser,
-  getSingleUser,
-  updateUser,
-  deleteUser,
+export const todoController = {
+  createTodo, getTodo, getSingleTodo, updateTodo , deleteTodo
 };

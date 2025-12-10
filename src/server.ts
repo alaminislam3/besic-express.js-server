@@ -5,6 +5,7 @@ import config from "./config";
 import initDB, { pool } from "./config/db";
 import logger from "./middleware/logger";
 import { userRouter } from "./middleware/modules/user/user.routes";
+import { todoRouter } from "./middleware/modules/todo/todo.routes";
 
 const app = express();
 const port = config.port;
@@ -19,214 +20,27 @@ app.get("/", logger, (req: Request, res: Response) => {
   res.send("Hello World!");
 });
 
+// USER CRUD
 app.use("/users", userRouter)
 
-app.get("/users/:id", async (req: Request, res: Response) => {
-  try {
-    const result = await pool.query(`SELECT * FROM users WHERE id= $1`, [
-      req.params.id,
-    ]);
+// app.get("/users/:id", userRouter);
 
-    if (result.rows.length === 0) {
-      res.status(404).json({
-        success: false,
-        message: "user not found",
-      });
-    } else {
-      res.status(200).json({
-        success: true,
-        message: "user fatched successfully",
-        data: result.rows[0],
-      });
-    }
-  } catch (err: any) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-});
+// app.put("/users/:id", );
 
-app.put("/users/:id", async (req: Request, res: Response) => {
-  const { name, email } = req.body;
-  try {
-    const result = await pool.query(
-      `UPDATE users SET name=$1, email=$2 WHERE id=$3 RETURNING *`,
-      [name, email, req.params.id]
-    );
-    // console.log(result.rows);
-    if (result.rows.length === 0) {
-      res.status(404).json({
-        success: false,
-        message: "user not found",
-      });
-    } else {
-      res.status(200).json({
-        success: true,
-        message: "user data update successfully",
-        data: result.rows[0],
-      });
-    }
-  } catch (err: any) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-});
-
-app.delete("/users/:id", async (req: Request, res: Response) => {
-  try {
-    const result = await pool.query(`DELETE FROM users WHERE id= $1`, [
-      req.params.id,
-    ]);
-
-    // console.log(result.rows);
-    if (result.rowCount === 0) {
-      res.status(404).json({
-        success: false,
-        message: "user not found",
-      });
-    } else {
-      res.status(200).json({
-        success: true,
-        message: "user deleted successfully",
-        data: null,
-      });
-    }
-  } catch (err: any) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-});
+// app.delete("/users/:id", );
 
 // TODO CRUD
-app.post("/todos", async (req: Request, res: Response) => {
-  const { user_id, title } = req.body;
-  try {
-    const result = pool.query(
-      `INSERT INTO todos (user_id,title) VALUES ($1,$2) RETURNING *`,
-      [user_id, title]
-    );
-  } catch (err: any) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-  res.status(201).json({
-    success: true,
-    message: "data posting successfully",
-  });
-});
+app.use("/todos", todoRouter);
 
-app.get("/todos", async (req: Request, res: Response) => {
-  try {
-    const result = await pool.query(`SELECT * FROM todos`);
-    res.status(200).json({
-      success: true,
-      message: " todos data is here",
-      data: result.rows,
-    });
-  } catch (err: any) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-      details: err,
-    });
-  }
-});
+// app.get("/todos", );
 
-app.get("/todos/:id", async (req: Request, res: Response) => {
-  try {
-    const result = await pool.query(`SELECT * FROM todos WHERE id= $1`, [
-      req.params.id,
-    ]);
+// app.get("/todos/:id",);
 
-    if (result.rows.length === 0) {
-      res.status(404).json({
-        success: false,
-        message: "todos data not found",
-      });
-    } else {
-      res.status(200).json({
-        success: true,
-        message: "user fatched successfully",
-        data: result.rows[0],
-      });
-    }
-  } catch (err: any) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-});
+// app.put("/todos/:id", );
 
-app.put("/todos/:id", async (req: Request, res: Response) => {
-  const { user_id, title } = req.body;
-  try {
-    const result = await pool.query(
-      `UPDATE todos SET user_id=$1, title=$2 WHERE id=$3 RETURNING *`,
-      [user_id, title, req.params.id]
-    );
-    // console.log(result.rows);
-    if (result.rows.length === 0) {
-      res.status(404).json({
-        success: false,
-        message: "todos data not found",
-      });
-    } else {
-      res.status(200).json({
-        success: true,
-        message: "todos data update successfully",
-        data: result.rows[0],
-      });
-    }
-  } catch (err: any) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-});
+// app.delete("/todos/:id", );
 
-app.delete("/todos/:id", async (req: Request, res: Response) => {
-  try {
-    const result = await pool.query(`DELETE FROM todos WHERE id= $1`, [
-      req.params.id,
-    ]);
 
-    // console.log(result.rows);
-    if (result.rowCount === 0) {
-      res.status(404).json({
-        success: false,
-        message: "todos data not found",
-      });
-    } else {
-      res.status(200).json({
-        success: true,
-        message: "todos data deleted successfully",
-        data: null,
-      });
-    }
-  } catch (err: any) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-});
-
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: "Route not found",
-    path: req.path,
-  });
-});
 
 /* Summary : Here todos table is refference table for User . Its means User is mother and todos is child. We can delete child(todos) and there will be not impect on mother (Users). But if we delete mother(Users) child will be deleted. Other things is WE can create a lot child by reffering a single mother's id. Everyhting will be idetified by id   */
 
